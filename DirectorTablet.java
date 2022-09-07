@@ -19,8 +19,22 @@ public class DirectorTablet {
     }
 
     public void printCookWorkloading() {
+        Map<String, Map<String, Integer>> cookWorkLoadingMap = StatisticManager.getInstance().getCookWorkLoadingMap();
+        ArrayList<String> list = new ArrayList<>(cookWorkLoadingMap.keySet());
+        Collections.sort(list);
 
+        for (String key : list) {
+            Map<String, Integer> cookMap = cookWorkLoadingMap.get(key);
+            System.out.println(key);
 
+            ArrayList<String> cookNames = new ArrayList<>(cookMap.keySet());
+            Collections.sort(cookNames);
+            for (String cookName : cookNames) {
+                System.out.println(cookName + " - " + ((cookMap.get(cookName) + 59) / 60) + " min");
+            }
+
+            System.out.println();
+        }
     }
 
     public void printActiveVideoSet() {
