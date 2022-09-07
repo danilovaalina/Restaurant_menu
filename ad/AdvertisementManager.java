@@ -1,13 +1,12 @@
 package com.javarush.task.task27.task2712.ad;
 
-import com.javarush.task.task27.task2712.ConsoleHelper;
 import com.javarush.task.task27.task2712.statistic.StatisticManager;
 import com.javarush.task.task27.task2712.statistic.event.VideoSelectedEventDataRow;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class AdvertisementManager {
     private final AdvertisementStorage storage = AdvertisementStorage.getInstance();
@@ -24,77 +23,72 @@ public class AdvertisementManager {
     public void processVideos() throws NoVideoAvailableException {
         VideoSelectedEventDataRow row = new VideoSelectedEventDataRow(bestAdvertisements, bestAmount, bestDuration);
         StatisticManager.getInstance().register(row);
-        if (storage.list().isEmpty()) {
-            throw new NoVideoAvailableException();
-        }
-        List<Advertisement> advertisements = storage.list().stream()
-                .filter(advertisement -> advertisement.getHits() > 0)
-                .collect(Collectors.toList());
-        makeAllAdvertisements(advertisements);
-        bestAdvertisements
-                .sort(Comparator.comparingLong(Advertisement::getAmountPerOneDisplaying)
-                        .thenComparingInt(Advertisement::getDuration)
-                        .reversed());
-        bestAdvertisements.forEach(advertisement -> {
-            ConsoleHelper.writeMessage(advertisement.toString());
-            advertisement.revalidate();
-        });
 
+        displayAdvertisement();
     }
 
-    private int calcDuration (List<Advertisement> advertisements) {
-        return advertisements.stream().mapToInt(Advertisement::getDuration).sum();
-    }
+    //recursy
+    private long maxAmount;
+    private List<Advertisement> optimalVideoSet;
+    private int totalTimeSecondsLeft;
 
-    private long calcAmount (List<Advertisement> advertisements) {
-        return advertisements.stream().mapToLong(Advertisement::getAmountPerOneDisplaying).sum();
-    }
-
-    private void checkSet (List<Advertisement> advertisements) {
-        int newDuration = calcDuration(advertisements);
-        long newAmount = calcAmount(advertisements);
-
-        if (bestAdvertisements == null && newDuration <= timeSeconds) {
-            bestAdvertisements = advertisements;
-            bestAmount = newAmount;
-            bestDuration = newDuration;
-        } else {
-            if (newDuration <= timeSeconds) {
-                if (newAmount > bestAmount) {
-                    bestAdvertisements = advertisements;
-                    bestAmount = newAmount;
-                    bestDuration = newDuration;
-                }
-
-                if (newAmount == bestAmount) {
-                    if (newDuration > bestDuration) {
-                        bestAdvertisements = advertisements;
-                        bestAmount = newAmount;
-                        bestDuration = newDuration;
-                    }
-
-                    if (newDuration == bestDuration && advertisements.size() < bestAdvertisements.size()) {
-                        bestAdvertisements = advertisements;
-                        bestAmount = newAmount;
-                        bestDuration = newDuration;
-                    }
-                }
-
+    private void obtainOptimalVideoSet(List<Advertisement> totalList, int currentTimeSecondsLeft, long currentAmount) {
+        if (currentTimeSecondsLeft < 0) {
+            return;
+        } else if (currentAmount > maxAmount
+                || currentAmount == maxAmount && (totalTimeSecondsLeft > currentTimeSecondsLeft
+                || totalTimeSecondsLeft == currentTimeSecondsLeft && totalList.size() < optimalVideoSet.size())) {
+            this.totalTimeSecondsLeft = currentTimeSecondsLeft;
+            this.optimalVideoSet = totalList;
+            this.maxAmount = currentAmount;
+            if (currentTimeSecondsLeft == 0) {
+                return;
             }
         }
-    }
 
-    private void makeAllAdvertisements(List<Advertisement> advertisements) {
-        if (advertisements.size() > 0) {
-            checkSet(advertisements);
-        }
-
-        for (int i = 0; i < advertisements.size(); i++) {
-            List<Advertisement> newAdvertisements = new ArrayList<>(advertisements);
-            newAdvertisements.remove(i);
-            makeAllAdvertisements(newAdvertisements);
+        ArrayList<Advertisement> tmp = getActualAdvertisements();
+        tmp.removeAll(totalList);
+        for (Advertisement ad : tmp) {
+            if (!ad.isActive()) continue;
+            ArrayList<Advertisement> currentList = new ArrayList<>(totalList);
+            currentList.add(ad);
+            obtainOptimalVideoSet(currentList, currentTimeSecondsLeft - ad.getDuration(), currentAmount + ad.getAmountPerOneDisplaying());
         }
     }
 
+    private ArrayList<Advertisement> getActualAdvertisements() {
+        ArrayList<Advertisement> advertisements = new ArrayList<>();
+        for (Advertisement ad : storage.list()) {
+            if (ad.isActive()) {
+                advertisements.add(ad);
+            }
+        }
+        return advertisements;
+    }
 
+    private void displayAdvertisement() {
+        //TODO displaying
+        if (optimalVideoSet == null || optimalVideoSet.isEmpty()) {
+            throw new NoVideoAvailableException();
+        }
+
+        Collections.sort(optimalVideoSet, new Comparator<Advertisement>() {
+            @Override
+            public int compare(Advertisement o1, Advertisement o2) {
+                long l = o2.getAmountPerOneDisplaying() - o1.getAmountPerOneDisplaying();
+                return (int) (l != 0 ? l : o2.getDuration() - o1.getDuration());
+            }
+        });
+
+        for (Advertisement ad : optimalVideoSet) {
+            displayInPlayer(ad);
+            ad.revalidate();
+        }
+    }
+
+    private void displayInPlayer(Advertisement advertisement) {
+        //TODO get Player instance and display content
+        System.out.println(advertisement.getName() + " is displaying... " + advertisement.getAmountPerOneDisplaying() +
+                ", " + (1000 * advertisement.getAmountPerOneDisplaying() / advertisement.getDuration()));
+    }
 }

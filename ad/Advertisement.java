@@ -22,11 +22,13 @@ public class Advertisement {
     }
 
     public void revalidate() {
-        if (hits == 0) throw new NoVideoAvailableException();
+        if (hits <= 0) throw new NoVideoAvailableException();
         hits--;
     }
 
-
+    public boolean isActive() {
+        return hits > 0;
+    }
 
     public String getName() {
         return name;
@@ -49,4 +51,6 @@ public class Advertisement {
     public String toString() {
         return String.format("%s is displaying... %d, %d", name, amountPerOneDisplaying, amountPerOneDisplaying * 1000 / duration);
     }
+
+
 }
