@@ -79,11 +79,26 @@ public class StatisticManager {
         return res;
     }
 
-    public Map<Date, Double> getCookWorkLoadingMap() {
-        Map<String, Map<String, Integer>> result = new HashMap<>();
-        List <EventDataRow> rows = statisticStorage.get(EventType.COOKED_ORDER);
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd-MMM-yyy", Locale.ENGLISH);
+    public Map<String, Map<String, Integer>> getCookWorkloadingMap() {
+        Map<String, Map<String, Integer>> res = new HashMap(); //name, time
+        List<EventDataRow> rows = statisticStorage.get(EventType.COOKED_ORDER);
+        SimpleDateFormat format = new SimpleDateFormat("dd-MMM-yyyy", Locale.ENGLISH);
+        for (EventDataRow row : rows) {
+            CookedOrderEventDataRow dataRow = (CookedOrderEventDataRow) row;
+            String date = format.format(dataRow.getDate());
+            if (!res.containsKey(date)) {
+                res.put(date, new HashMap<String, Integer>());
+            }
+            Map<String, Integer> cookMap = res.get(date);
+            String cookName = dataRow.getCookName();
+            if (!cookMap.containsKey(cookName)) {
+                cookMap.put(cookName, 0);
+            }
 
+            Integer totalTime = cookMap.get(cookName);
+            cookMap.put(cookName, totalTime + dataRow.getTime());
+        }
 
+        return res;
     }
 }
