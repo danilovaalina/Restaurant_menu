@@ -39,6 +39,13 @@ public class StatisticManager {
             }
         }
 
+        private List<EventDataRow> get(EventType type) {
+            if (!this.storage.containsKey(type))
+                throw new UnsupportedOperationException();
+
+            return this.storage.get(type);
+        }
+
         public  Map<EventType, List<EventDataRow>> getStorage() {
             return storage;
         }
@@ -52,29 +59,29 @@ public class StatisticManager {
         cooks.add(cook);
     }
 
-    public Map<Date, Double> advertisementProfit() {
-        List<EventDataRow> rows = statisticStorage.getStorage().get(EventType.SELECTED_VIDEOS);
-        TreeMap<Date, Double> advertisementProfit = (TreeMap<Date, Double>) Collections.reverseOrder();
+    public Map<String, Long> getProfitMap() {
+        Map<String, Long> res = new HashMap();
+        List<EventDataRow> rows = statisticStorage.get(EventType.SELECTED_VIDEOS);
+        SimpleDateFormat format = new SimpleDateFormat("dd-MMM-yyyy", Locale.ENGLISH);
+        long total = 0l;
         for (EventDataRow row : rows) {
-            VideoSelectedEventDataRow videoRow = (VideoSelectedEventDataRow) row;
-            Calendar calendar = Calendar.getInstance();
-            calendar.setTime(videoRow.getDate());
-            GregorianCalendar gregorianCalendar = new GregorianCalendar(
-                    calendar.get(Calendar.YEAR),
-                    calendar.get(Calendar.MONTH),
-                    calendar.get(Calendar.DAY_OF_MONTH));
-            Date date = gregorianCalendar.getTime();
-            double sum = (double) videoRow.getAmount()/100;
-            if (!advertisementProfit.containsKey(date)) {
-                advertisementProfit.put(date, sum);
+            VideoSelectedEventDataRow dataRow = (VideoSelectedEventDataRow) row;
+            String date = format.format(dataRow.getDate());
+            if (!res.containsKey(date)) {
+                res.put(date, 0l);
             }
+            total += dataRow.getAmount();
+            res.put(date, res.get(date) + dataRow.getAmount());
         }
-        return advertisementProfit;
+
+        res.put("Total", total);
+
+        return res;
     }
 
     public Map<Date, Double> getCookWorkLoadingMap() {
         Map<String, Map<String, Integer>> result = new HashMap<>();
-        List <EventDataRow> rows = statisticStorage.getStorage().get(EventType.COOKED_ORDER);
+        List <EventDataRow> rows = statisticStorage.get(EventType.COOKED_ORDER);
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd-MMM-yyy", Locale.ENGLISH);
 
 
