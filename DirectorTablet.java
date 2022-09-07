@@ -7,14 +7,14 @@ import java.util.*;
 public class DirectorTablet {
 
     public void printAdvertisementProfit() {
-        Map<Date, Double> advertisementProfit = StatisticManager.getInstance().advertisementProfit();
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd-MMM-yyyy", Locale.ENGLISH);
-        double sum = advertisementProfit.values().stream().mapToDouble(Double::doubleValue).sum();
-        for (Map.Entry<Date, Double> pair : advertisementProfit.entrySet()) {
-            if (pair.getValue() > 0) {
-                ConsoleHelper.writeMessage(pair.getKey() + " - " + pair.getValue());
-                ConsoleHelper.writeMessage("Total - " + sum);
-            }
+        StatisticManager statisticManager = StatisticManager.getInstance();
+        Map<String, Long> profitMap = statisticManager.getProfitMap();
+        ArrayList<String> list = new ArrayList(profitMap.keySet());
+        Collections.sort(list);
+
+        for (String key : list) {
+            double amount = 1.0 * profitMap.get(key) / 100;
+            System.out.println(key + " - " + String.format(Locale.ENGLISH, "%.2f", amount));
         }
     }
 
