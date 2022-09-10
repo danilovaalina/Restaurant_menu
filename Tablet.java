@@ -17,22 +17,40 @@ public class Tablet extends Observable {
         this.number = number;
     }
 
-    public Order createOrder() {
+    public void createOrder() {
         Order order = null;
         try {
             order = new Order(this);
-            if (order.isEmpty()) return null;
-            ConsoleHelper.writeMessage(order.toString());
-            AdvertisementManager advertisementManager = new AdvertisementManager(order.getTotalCookingTime() * 60);
-            advertisementManager.processVideos();
-            setChanged();
-            notifyObservers(order);
+            processOrder(order);
         } catch (IOException e) {
             logger.log(Level.SEVERE, "Console is unavailable.");
         } catch (NoVideoAvailableException e) {
             logger.log(Level.INFO, "No video is available for the order " + order);
         }
-        return order;
+    }
+
+    public void createTestOrder() {
+        Order order = null;
+        try {
+            order = new TestOrder(this);
+            processOrder(order);
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "Console is unavailable.");
+        } catch (NoVideoAvailableException e) {
+            logger.log(Level.INFO, "No video is available for the order " + order);
+        }
+    }
+
+    private boolean processOrder(Order order) {
+        ConsoleHelper.writeMessage(order.toString());
+        if (order.isEmpty())
+            return true;
+
+        setChanged();
+        notifyObservers(order);
+
+        new AdvertisementManager(order.getTotalCookingTime() * 60).processVideos();
+        return false;
     }
 
     @Override
