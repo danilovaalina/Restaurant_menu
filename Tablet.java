@@ -9,9 +9,10 @@ import java.util.Observable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class Tablet extends Observable {
+public class Tablet {
     private final int number;
     public static Logger logger = Logger.getLogger(Tablet.class.getName());
+    private LinkedBlockingQueue<Order> queue;
 
     public Tablet(int number) {
         this.number = number;
@@ -46,8 +47,7 @@ public class Tablet extends Observable {
         if (order.isEmpty())
             return true;
 
-        setChanged();
-        notifyObservers(order);
+        queue.add(order);
 
         new AdvertisementManager(order.getTotalCookingTime() * 60).processVideos();
         return false;
@@ -59,4 +59,9 @@ public class Tablet extends Observable {
                 "number=" + number +
                 '}';
     }
+
+    public void setQueue(LinkedBlockingQueue<Order> queue) {
+        this.queue = queue;
+    }
+
 
