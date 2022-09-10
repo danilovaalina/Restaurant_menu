@@ -38,10 +38,18 @@ public class DirectorTablet {
     }
 
     public void printActiveVideoSet() {
-
+        List<Advertisement> activeVideos = StatisticAdvertisementManager.getInstance().getActiveVideos();
+        activeVideos.sort((o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
+        for (Advertisement activeVideo : activeVideos) {
+            System.out.println(activeVideo.getName() + " - " + activeVideo.getHits());
+        }
     }
 
     public void printArchivedVideoSet() {
-
+        List<Advertisement> archivedVideos = StatisticAdvertisementManager.getInstance().getNotActiveVideos();
+        archivedVideos.sort((o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
+        for (Advertisement archivedVideo : archivedVideos) {
+            System.out.println(archivedVideo.getName());
+        }
     }
 }
