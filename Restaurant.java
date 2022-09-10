@@ -7,13 +7,27 @@ public class Restaurant {
     private static final int ORDER_CREATING_INTERVAL = 100;
 
     public static void main(String[] args) {
-        Tablet tablet = new Tablet(1);
-        Cook cook = new Cook("Amigo");
+        Cook cook1 = new Cook("Amigo");
+        Cook cook2 = new Cook("Diego");
+
+        StatisticManager.getInstance().register(cook1);
+        StatisticManager.getInstance().register(cook2);
+
+        List<Tablet> tablets = new ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            Tablet tablet = new new Tablet(i + 1);
+            tablets.add(tablet);
+
+            tablet.addObserver(cook1);
+            tablet.addObserver(cook2);
+        }
+
         Waiter waiter = new Waiter();
-        tablet.addObserver(cook);
         cook.addObserver(waiter);
 
-        tablet.createOrder();
+        Thread thread = new Thread(new RandomOrderGeneratorTask(tablets, ORDER_CREATING_INTERVAL));
+        thread.start();
+        thread.interrupt();
 
         DirectorTablet directorTablet = new DirectorTablet();
         directorTablet.printAdvertisementProfit();
